@@ -15,9 +15,9 @@ namespace Captainbi\Hyperf\Process\AsyncQueue;
 use Hyperf\AsyncQueue\Process\ConsumerProcess;
 use Hyperf\Process\Annotation\Process;
 
-///**
-// * @Process
-// */
+/**
+ * @Process(name="async-queue")
+ */
 class AsyncQueueConsumer extends ConsumerProcess
 {
     /**
