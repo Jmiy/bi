@@ -35,7 +35,7 @@
         }
     },
     "replace": {
-        "captainbi/hyperf": "*"
+        "jmiy/captainbi-hyperf": "*"
     },
     "config": {
         "sort-packages": true
