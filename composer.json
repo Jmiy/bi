@@ -23,11 +23,6 @@
         ]
     },
     "description": "",
-    "extra": {
-        "hyperf": {
-            "config": "Captainbi\\Hyperf\\ConfigProvider"
-        }
-    },
     "repositories": {
         "packagist": {
             "type": "composer",
