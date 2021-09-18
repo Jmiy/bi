@@ -22,7 +22,7 @@ class ConfigProvider
                 //FactoryInterface::class  => DingNoticeFactory::class,
             ],
             'processes' => [
-                RestartServiceProcess::class,
+                //RestartServiceProcess::class,
             ],
             'annotations' => [
                 'scan' => [
