@@ -15,8 +15,6 @@ use Hyperf\Database\Schema\PostgresBuilder;
 use Hyperf\Database\Schema\Grammars\PostgresGrammar as SchemaGrammar;
 use Hyperf\Database\Query\Processors\PostgresProcessor;
 use Hyperf\Database\Query\Grammars\PostgresGrammar;
-
-
 use Hyperf\Database\PostgresConnection;
 use Hyperf\Database\Connectors\PostgresConnector;
 
@@ -28,7 +26,6 @@ class ConfigProvider
             'dependencies' => [
                 LuaInterface::class => LuaFactory::class,
                 //EncrypterInterface::class => EncrypterFactory::class,
-                //FactoryInterface::class  => DingNoticeFactory::class,
                 'db.connector.pgsql' => PostgresConnector::class,
             ],
             'processes' => [

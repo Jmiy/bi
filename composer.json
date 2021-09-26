@@ -11,7 +11,8 @@
         "hyperf/async-queue": "^2.1",
         "hyperf/signal": "^2.1",
         "hyperf/snowflake": "^2.1",
-        "hyperf/constants": "^2.1"
+        "hyperf/constants": "^2.1",
+        "jmiy/hyperf-ding-notice": "1.x-dev"
     },
     "autoload":{
         "psr-4":{
