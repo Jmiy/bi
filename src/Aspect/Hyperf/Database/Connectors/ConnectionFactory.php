@@ -9,6 +9,7 @@ declare(strict_types=1);
  * @contact  group@hyperf.io
  * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
  */
+
 namespace Captainbi\Hyperf\Aspect\Hyperf\Database\Connectors;
 
 use InvalidArgumentException;
@@ -23,6 +24,10 @@ use Hyperf\Database\Connectors\PostgresConnector;
 use Hyperf\Di\Annotation\Aspect;
 use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
+
+use Psr\Container\ContainerInterface;
+use Hyperf\Utils\ApplicationContext;
+
 
 /**
  * @Aspect
@@ -47,20 +52,20 @@ class ConnectionFactory extends AbstractAspect
     /**
      * Create a connector instance based on the configuration.
      *
-     * @throws \InvalidArgumentException
      * @return ConnectorInterface
+     * @throws \InvalidArgumentException
      */
     public function aop_createConnector(ProceedingJoinPoint $proceedingJoinPoint)//,array $config
     {
 
         $config = data_get($proceedingJoinPoint->arguments, 'keys.config', []);
 
-        if (! isset($config['driver'])) {
+        if (!isset($config['driver'])) {
             throw new InvalidArgumentException('A driver must be specified.');
         }
 
-        if ($this->container->has($key = "db.connector.{$config['driver']}")) {
-            return $this->container->get($key);
+        if (ApplicationContext::getContainer()->has($key = "db.connector.{$config['driver']}")) {
+            return ApplicationContext::getContainer()->get($key);
         }
 
         switch ($config['driver']) {
@@ -80,17 +85,17 @@ class ConnectionFactory extends AbstractAspect
      * @param \Closure|\PDO $connection
      * @param string $database
      * @param string $prefix
-     * @throws \InvalidArgumentException
      * @return \Hyperf\Database\Connection
+     * @throws \InvalidArgumentException
      */
     public function aop_createConnection(ProceedingJoinPoint $proceedingJoinPoint)//$driver, $connection, $database, $prefix = '', array $config = []
     {
 
-        $driver=data_get($proceedingJoinPoint->arguments, 'keys.driver');
-        $connection=data_get($proceedingJoinPoint->arguments, 'keys.connection');
-        $database=data_get($proceedingJoinPoint->arguments, 'keys.database');
-        $prefix =data_get($proceedingJoinPoint->arguments, 'keys.prefix','');
-        $config =data_get($proceedingJoinPoint->arguments, 'keys.config',[]);
+        $driver = data_get($proceedingJoinPoint->arguments, 'keys.driver');
+        $connection = data_get($proceedingJoinPoint->arguments, 'keys.connection');
+        $database = data_get($proceedingJoinPoint->arguments, 'keys.database');
+        $prefix = data_get($proceedingJoinPoint->arguments, 'keys.prefix', '');
+        $config = data_get($proceedingJoinPoint->arguments, 'keys.config', []);
 
         if ($resolver = Connection::getResolver($driver)) {
             return $resolver($connection, $database, $prefix, $config);
