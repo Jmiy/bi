@@ -152,7 +152,7 @@ class PostgresConnection extends Connection
      */
     public function getStatementKey()
     {
-        return __METHOD__ . uniqid() . microtime(true);
+        return __METHOD__ . md5(uniqid(mt_rand().'', true)) . microtime(true) . mt_rand();
     }
 
     public function handleQuerySql(string $query, array $bindings = []) {
@@ -290,5 +290,81 @@ class PostgresConnection extends Connection
 
             return $count;
         });
+    }
+
+    /**
+     * Create a transaction within the database.
+     */
+    protected function createTransaction()
+    {
+        if ($this->transactions == 0) {
+            $this->reconnectIfMissingConnection();
+
+            try {
+                $this->getPdo()->query('BEGIN');
+            } catch (Exception $e) {
+                $this->handleBeginTransactionException($e);
+            }
+        } elseif ($this->transactions >= 1 && $this->queryGrammar->supportsSavepoints()) {
+            $this->createSavepoint();
+        }
+    }
+
+    /**
+     * Create a save point within the database.
+     */
+    protected function createSavepoint()
+    {
+        $this->getPdo()->query(
+            $this->queryGrammar->compileSavepoint('trans' . ($this->transactions + 1))
+        );
+    }
+
+    /**
+     * Handle an exception from a transaction beginning.
+     *
+     * @param \Throwable $e
+     *
+     * @throws \Exception
+     */
+    protected function handleBeginTransactionException($e)
+    {
+        if ($this->causedByLostConnection($e)) {
+            $this->reconnect();
+
+            $this->pdo->query('BEGIN');
+        } else {
+            throw $e;
+        }
+    }
+
+    /**
+     * Commit the active database transaction.
+     */
+    public function commit(): void
+    {
+        if ($this->transactions == 1) {
+            $this->getPdo()->query('COMMIT');
+        }
+
+        $this->transactions = max(0, $this->transactions - 1);
+
+        $this->fireConnectionEvent('committed');
+    }
+
+    /**
+     * Perform a rollback within the database.
+     *
+     * @param int $toLevel
+     */
+    protected function performRollBack($toLevel)
+    {
+        if ($toLevel == 0) {
+            $this->getPdo()->query('ROLLBACK');
+        } elseif ($this->queryGrammar->supportsSavepoints()) {
+            $this->getPdo()->query(
+                $this->queryGrammar->compileSavepointRollBack('trans' . ($toLevel + 1))
+            );
+        }
     }
 }

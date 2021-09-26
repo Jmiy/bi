@@ -11,6 +11,15 @@ use Captainbi\Hyperf\Process\RestartServiceProcess;
 use Captainbi\Hyperf\Util\Redis\Lua\LuaFactory;
 use Captainbi\Hyperf\Util\Redis\Lua\Contracts\LuaInterface;
 
+use Hyperf\Database\Schema\PostgresBuilder;
+use Hyperf\Database\Schema\Grammars\PostgresGrammar as SchemaGrammar;
+use Hyperf\Database\Query\Processors\PostgresProcessor;
+use Hyperf\Database\Query\Grammars\PostgresGrammar;
+
+
+use Hyperf\Database\PostgresConnection;
+use Hyperf\Database\Connectors\PostgresConnector;
+
 class ConfigProvider
 {
     public function __invoke(): array
@@ -20,6 +29,7 @@ class ConfigProvider
                 LuaInterface::class => LuaFactory::class,
                 //EncrypterInterface::class => EncrypterFactory::class,
                 //FactoryInterface::class  => DingNoticeFactory::class,
+                'db.connector.pgsql' => PostgresConnector::class,
             ],
             'processes' => [
                 //RestartServiceProcess::class,
@@ -34,6 +44,13 @@ class ConfigProvider
                         RedisDriver::class => __DIR__ . '/../class_map/Hyperf/Cache/Driver/RedisDriver.php',
                         PipeMessage::class => __DIR__ . '/ConfigApollo/class_map/PipeMessage.php',
                         ConfigFetcherProcess::class => __DIR__ . '/ConfigApollo/class_map/Process/ConfigFetcherProcess.php',
+
+                        PostgresBuilder::class => __DIR__ . '/../class_map/Hyperf/Database/Schema/PostgresBuilder.php',
+                        SchemaGrammar::class => __DIR__ . '/../class_map/Hyperf/Database/Schema/PostgresGrammar.php',
+                        PostgresProcessor::class => __DIR__ . '/../class_map/Hyperf/Database/Query/Processors/PostgresProcessor.php',
+                        PostgresGrammar::class => __DIR__ . '/../class_map/Hyperf/Database/Query/Grammars/PostgresGrammar.php',
+                        PostgresConnection::class => __DIR__ . '/../class_map/Hyperf/Database/PostgresConnection.php',
+                        PostgresConnector::class => __DIR__ . '/../class_map/Hyperf/Database/Connectors/PostgresConnector.php',
                     ],
                 ],
             ],

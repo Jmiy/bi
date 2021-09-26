@@ -33,22 +33,7 @@ class PostgresConnector extends Connector implements ConnectorInterface
      */
     public function getStatementKey()
     {
-        return __METHOD__ . uniqid() . microtime(true);
-    }
-
-    public function handleQuerySql(string $query, array $bindings = []) {
-
-        if(empty($bindings)){
-            return $query;
-        }
-
-        $search = $this->getQueryGrammar()->parameter('');
-        foreach ($bindings as $key => $value) {
-            $replace = '$' . ($key + 1);
-            $query = Str::replaceFirst($search, (string)$replace, $query);
-        }
-
-        return $query;
+        return __METHOD__ . md5(uniqid(mt_rand().'', true)) . microtime(true) . mt_rand();
     }
 
     /**
@@ -63,6 +48,24 @@ class PostgresConnector extends Connector implements ConnectorInterface
         if ($error) {//如果有错误，就抛出异常
             throw new OutOfBoundsException(((string)$connection->error) . ($msg ? ('===>' . $msg) : $msg), $code);
         }
+    }
+
+    protected function initConfigure($connection, $config, $query)
+    {
+        $key = $this->getStatementKey();
+
+        //$connection->prepare($key,$query)->execute($key,[]);
+
+        $prepareResult = $connection->prepare($key, $query);
+        $this->throwException($connection, __CLASS__ . '::configureEncoding-----prepare----exception', 8);
+        if ($prepareResult === false) {
+            return;
+        }
+
+        $resource = $connection->execute($key, []);
+        $this->throwException($connection, __CLASS__ . '::configureEncoding-----execute----exception', 9);
+
+        return;
     }
 
     /**
@@ -151,7 +154,25 @@ class PostgresConnector extends Connector implements ConnectorInterface
             return;
         }
 
-        $connection->prepare('key',"set names '{$config['charset']}'")->execute('key',[]);
+//        $query = "set names '{$config['charset']}'";
+//        $this->initConfigure($connection, $config, $query);
+
+        $key = $this->getStatementKey();
+        $query = "set names '{$config['charset']}'";
+
+        //$connection->prepare($key,$query)->execute($key,[]);
+
+        $prepareResult = $connection->prepare($key, $query);
+        $this->throwException($connection, __CLASS__.'::configureEncoding-----prepare----exception', 8);
+        if ($prepareResult === false) {
+            return;
+        }
+
+        $resource = $connection->execute($key, []);
+        $this->throwException($connection, __CLASS__.'::configureEncoding-----execute----exception', 9);
+
+        return;
+
     }
 
     /**
@@ -166,7 +187,21 @@ class PostgresConnector extends Connector implements ConnectorInterface
         if (isset($config['timezone'])) {
             $timezone = $config['timezone'];
 
-            $connection->prepare('key',"set time zone '{$timezone}'")->execute('key',[]);
+            //$connection->prepare('key',"set time zone '{$timezone}'")->execute('key',[]);
+
+            $key = $this->getStatementKey();
+            $query = "set time zone '{$timezone}'";
+            $prepareResult = $connection->prepare($key, $query);
+            $this->throwException($connection, __CLASS__.'::configureTimezone-----prepare----exception', 10);
+            if ($prepareResult === false) {
+                return;
+            }
+
+            $resource = $connection->execute($key, []);
+            $this->throwException($connection, __CLASS__.'::configureTimezone-----execute----exception', 11);
+
+            return;
+
         }
     }
 
@@ -182,7 +217,20 @@ class PostgresConnector extends Connector implements ConnectorInterface
         if (isset($config['schema'])) {
             $schema = $this->formatSchema($config['schema']);
 
-            $connection->prepare('key',"set search_path to {$schema}")->execute('key',[]);
+            //$connection->prepare('key',"set search_path to {$schema}")->execute('key',[]);
+
+            $key = $this->getStatementKey();
+            $query = "set search_path to {$schema}";
+            $prepareResult = $connection->prepare($key, $query);
+            $this->throwException($connection, __CLASS__.'::configureSchema-----prepare----exception', 12);
+            if ($prepareResult === false) {
+                return;
+            }
+
+            $resource = $connection->execute($key, []);
+            $this->throwException($connection, __CLASS__.'::configureSchema-----execute----exception', 13);
+
+            return;
         }
     }
 
@@ -213,7 +261,18 @@ class PostgresConnector extends Connector implements ConnectorInterface
         if (isset($config['application_name'])) {
             $applicationName = $config['application_name'];
 
-            $connection->prepare('key',"set application_name to '$applicationName'")->execute('key',[]);
+            //$connection->prepare('key',"set application_name to '$applicationName'")->execute('key',[]);
+
+            $key = $this->getStatementKey();
+            $query = "set application_name to '$applicationName'";
+            $prepareResult = $connection->prepare($key, $query);
+            $this->throwException($connection, __CLASS__.'::configureApplicationName-----prepare----exception', 15);
+            if ($prepareResult === false) {
+                return;
+            }
+
+            $resource = $connection->execute($key, []);
+            $this->throwException($connection, __CLASS__.'::configureApplicationName-----execute----exception', 16);
         }
     }
 

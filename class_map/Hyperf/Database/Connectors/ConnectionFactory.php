@@ -11,47 +11,34 @@ declare(strict_types=1);
  */
 namespace Hyperf\Database\Connectors;
 
-use Hyperf\Database\Connection;
-use Hyperf\Database\ConnectionInterface;
-use Hyperf\Database\MySqlConnection;
-use Hyperf\Utils\Arr;
 use InvalidArgumentException;
-use PDOException;
-use Psr\Container\ContainerInterface;
+
+use Hyperf\Database\Connection;
+use Hyperf\Database\MySqlConnection;
 use Hyperf\Database\PostgresConnection;
+use Hyperf\Database\Connectors\ConnectionFactory as HyperfDatabaseConnectionFactory;
 
-class ConnectionFactory
+use Hyperf\Di\Annotation\Aspect;
+use Hyperf\Di\Aop\ProceedingJoinPoint;
+
+/**
+ * @Aspect
+ */
+class ConnectionFactory extends AbstractAspect
 {
-    /**
-     * The IoC container instance.
-     *
-     * @var ContainerInterface
-     */
-    protected $container;
+    // 要切入的类，可以多个，亦可通过 :: 标识到具体的某个方法，通过 * 可以模糊匹配
+    public $classes = [
+        HyperfDatabaseConnectionFactory::class . '::createConnector',
+        HyperfDatabaseConnectionFactory::class . '::createConnector',
+    ];
 
-    /**
-     * Create a new connection factory instance.
-     */
-    public function __construct(ContainerInterface $container)
+    // 要切入的注解，具体切入的还是使用了这些注解的类，仅可切入类注解和类方法注解
+    public $annotations = [
+    ];
+
+    public function process(ProceedingJoinPoint $proceedingJoinPoint)
     {
-        $this->container = $container;
-    }
-
-    /**
-     * Establish a PDO connection based on the configuration.
-     *
-     * @param string $name
-     * @return ConnectionInterface
-     */
-    public function make(array $config, $name = null)
-    {
-        $config = $this->parseConfig($config, $name);
-
-        if (isset($config['read'])) {
-            return $this->createReadWriteConnection($config);
-        }
-
-        return $this->createSingleConnection($config);
+        return call([$this, "aop_" . $proceedingJoinPoint->methodName], [$proceedingJoinPoint]);
     }
 
     /**
@@ -60,8 +47,11 @@ class ConnectionFactory
      * @throws \InvalidArgumentException
      * @return ConnectorInterface
      */
-    public function createConnector(array $config)
+    public function aop_createConnector(ProceedingJoinPoint $proceedingJoinPoint)//,array $config
     {
+
+        $config = data_get($proceedingJoinPoint->arguments, 'keys.config', []);
+
         if (! isset($config['driver'])) {
             throw new InvalidArgumentException('A driver must be specified.');
         }
@@ -81,168 +71,6 @@ class ConnectionFactory
     }
 
     /**
-     * Parse and prepare the database configuration.
-     *
-     * @param string $name
-     * @return array
-     */
-    protected function parseConfig(array $config, $name)
-    {
-        return Arr::add(Arr::add($config, 'prefix', ''), 'name', $name);
-    }
-
-    /**
-     * Create a single database connection instance.
-     *
-     * @return Connection
-     */
-    protected function createSingleConnection(array $config)
-    {
-        $pdo = $this->createPdoResolver($config);
-
-        return $this->createConnection(
-            $config['driver'],
-            $pdo,
-            $config['database'],
-            $config['prefix'],
-            $config
-        );
-    }
-
-    /**
-     * Create a single database connection instance.
-     *
-     * @return Connection
-     */
-    protected function createReadWriteConnection(array $config)
-    {
-        $connection = $this->createSingleConnection($this->getWriteConfig($config));
-
-        return $connection->setReadPdo($this->createReadPdo($config));
-    }
-
-    /**
-     * Create a new PDO instance for reading.
-     *
-     * @return \Closure
-     */
-    protected function createReadPdo(array $config)
-    {
-        return $this->createPdoResolver($this->getReadConfig($config));
-    }
-
-    /**
-     * Get the read configuration for a read / write connection.
-     *
-     * @return array
-     */
-    protected function getReadConfig(array $config)
-    {
-        return $this->mergeReadWriteConfig(
-            $config,
-            $this->getReadWriteConfig($config, 'read')
-        );
-    }
-
-    /**
-     * Get the read configuration for a read / write connection.
-     *
-     * @return array
-     */
-    protected function getWriteConfig(array $config)
-    {
-        return $this->mergeReadWriteConfig(
-            $config,
-            $this->getReadWriteConfig($config, 'write')
-        );
-    }
-
-    /**
-     * Get a read / write level configuration.
-     *
-     * @param string $type
-     * @return array
-     */
-    protected function getReadWriteConfig(array $config, $type)
-    {
-        return isset($config[$type][0])
-            ? Arr::random($config[$type])
-            : $config[$type];
-    }
-
-    /**
-     * Merge a configuration for a read / write connection.
-     *
-     * @return array
-     */
-    protected function mergeReadWriteConfig(array $config, array $merge)
-    {
-        return Arr::except(array_merge($config, $merge), ['read', 'write']);
-    }
-
-    /**
-     * Create a new Closure that resolves to a PDO instance.
-     *
-     * @return \Closure
-     */
-    protected function createPdoResolver(array $config)
-    {
-        return array_key_exists('host', $config)
-            ? $this->createPdoResolverWithHosts($config)
-            : $this->createPdoResolverWithoutHosts($config);
-    }
-
-    /**
-     * Create a new Closure that resolves to a PDO instance with a specific host or an array of hosts.
-     *
-     * @return \Closure
-     */
-    protected function createPdoResolverWithHosts(array $config)
-    {
-        return function () use ($config) {
-            foreach (Arr::shuffle($hosts = $this->parseHosts($config)) as $key => $host) {
-                $config['host'] = $host;
-
-                try {
-                    return $this->createConnector($config)->connect($config);
-                } catch (PDOException $e) {
-                    continue;
-                }
-            }
-
-            throw $e;
-        };
-    }
-
-    /**
-     * Parse the hosts configuration item into an array.
-     *
-     * @return array
-     */
-    protected function parseHosts(array $config)
-    {
-        $hosts = Arr::wrap($config['host']);
-
-        if (empty($hosts)) {
-            throw new InvalidArgumentException('Database hosts array is empty.');
-        }
-
-        return $hosts;
-    }
-
-    /**
-     * Create a new Closure that resolves to a PDO instance where there is no configured host.
-     *
-     * @return \Closure
-     */
-    protected function createPdoResolverWithoutHosts(array $config)
-    {
-        return function () use ($config) {
-            return $this->createConnector($config)->connect($config);
-        };
-    }
-
-    /**
      * Create a new connection instance.
      *
      * @param string $driver
@@ -252,8 +80,15 @@ class ConnectionFactory
      * @throws \InvalidArgumentException
      * @return \Hyperf\Database\Connection
      */
-    protected function createConnection($driver, $connection, $database, $prefix = '', array $config = [])
+    protected function aop_createConnection(ProceedingJoinPoint $proceedingJoinPoint)//$driver, $connection, $database, $prefix = '', array $config = []
     {
+
+        $driver=data_get($proceedingJoinPoint->arguments, 'keys.driver');
+        $connection=data_get($proceedingJoinPoint->arguments, 'keys.connection');
+        $database=data_get($proceedingJoinPoint->arguments, 'keys.database');
+        $prefix =data_get($proceedingJoinPoint->arguments, 'keys.prefix','');
+        $config =data_get($proceedingJoinPoint->arguments, 'keys.config',[]);
+
         if ($resolver = Connection::getResolver($driver)) {
             return $resolver($connection, $database, $prefix, $config);
         }
