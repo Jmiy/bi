@@ -83,7 +83,7 @@ class ConnectionFactory extends AbstractAspect
      * @throws \InvalidArgumentException
      * @return \Hyperf\Database\Connection
      */
-    protected function aop_createConnection(ProceedingJoinPoint $proceedingJoinPoint)//$driver, $connection, $database, $prefix = '', array $config = []
+    public function aop_createConnection(ProceedingJoinPoint $proceedingJoinPoint)//$driver, $connection, $database, $prefix = '', array $config = []
     {
 
         $driver=data_get($proceedingJoinPoint->arguments, 'keys.driver');
