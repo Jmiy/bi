@@ -21,6 +21,7 @@ use Hyperf\Database\Connectors\MySqlConnector;
 use Hyperf\Database\Connectors\PostgresConnector;
 
 use Hyperf\Di\Annotation\Aspect;
+use Hyperf\Di\Aop\AbstractAspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
 
 /**
