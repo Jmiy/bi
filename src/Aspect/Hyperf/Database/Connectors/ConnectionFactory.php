@@ -17,6 +17,8 @@ use Hyperf\Database\Connection;
 use Hyperf\Database\MySqlConnection;
 use Hyperf\Database\PostgresConnection;
 use Hyperf\Database\Connectors\ConnectionFactory as HyperfDatabaseConnectionFactory;
+use Hyperf\Database\Connectors\MySqlConnector;
+use Hyperf\Database\Connectors\PostgresConnector;
 
 use Hyperf\Di\Annotation\Aspect;
 use Hyperf\Di\Aop\ProceedingJoinPoint;
