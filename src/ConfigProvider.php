@@ -53,22 +53,46 @@ class ConfigProvider
             ],
             'publish' => [
                 [
-                    'id' => 'config',
+                    'id' => 'apollo-config',
                     'description' => 'The config for apollo',
                     'source' => __DIR__ . '/../publish/apollo.php',
                     'destination' => BASE_PATH . '/config/autoload/apollo.php',
                 ],
                 [
-                    'id' => 'config',
+                    'id' => 'restart-console-config',
                     'description' => 'The config for restart process',
                     'source' => __DIR__ . '/../publish/restart_console.php',
                     'destination' => BASE_PATH . '/config/autoload/restart_console.php',
                 ],
                 [
-                    'id' => 'config',
+                    'id' => 'restart-process-script',
                     'description' => 'The script for restart process',
                     'source' => __DIR__ . '/../publish/bin/restart.php',
                     'destination' => BASE_PATH . '/bin/restart.php',
+                ],
+                [
+                    'id' => 'async-queue-config',
+                    'description' => 'The config for async queue.',
+                    'source' => __DIR__ . '/../publish/async_queue.php',
+                    'destination' => BASE_PATH . '/config/autoload/async_queue.php',
+                ],
+                [
+                    'id' => 'signal-config',
+                    'description' => 'The config for signal.',
+                    'source' => __DIR__ . '/../publish/signal.php',
+                    'destination' => BASE_PATH . '/config/autoload/signal.php',
+                ],
+                [
+                    'id' => 'snowflake-config',
+                    'description' => 'The config of snowflake.',
+                    'source' => __DIR__ . '/../publish/snowflake.php',
+                    'destination' => BASE_PATH . '/config/autoload/snowflake.php',
+                ],
+                [
+                    'id' => 'ding-config',
+                    'description' => 'The config for ding.',
+                    'source' => __DIR__ . '/../publish/ding.php',
+                    'destination' => BASE_PATH . '/config/autoload/ding.php',
                 ],
             ],
         ];
