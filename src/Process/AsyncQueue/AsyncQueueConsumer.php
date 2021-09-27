@@ -31,9 +31,4 @@ class AsyncQueueConsumer extends ConsumerProcess
      * timeout     消费超时的队列 (虽然超时，但可能执行成功)  $this->redis->lPush($this->channel->getTimeout(), $message)
      */
 
-    /**
-     * @var string
-     */
-    public $name = 'async-queue';
-
 }
