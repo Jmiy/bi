@@ -43,7 +43,6 @@ class BaseExceptionHandler extends ExceptionHandler
     protected $data = [];
 
 
-
     public function __construct(LoggerFactory $loggerFactory)
     {
         $this->logger = $loggerFactory->get('log', 'default');
@@ -54,11 +53,8 @@ class BaseExceptionHandler extends ExceptionHandler
         $this->logger->error(sprintf('%s[%s] in %s', $throwable->getMessage(), $throwable->getLine(), $throwable->getFile()));
         $this->logger->error($throwable->getTraceAsString());
 
-        $this->message   = $this->message?$this->message:$throwable->getMessage();
-        $this->code      = $this->code?$this->code:$throwable->getCode();
-        // 格式化输出
-        $data = Result::fail($this->data, $this->message, $this->code);
-        $this->stopPropagation();
+        $this->message = $this->message ? $this->message : $throwable->getMessage();
+        $this->code = $this->code ? $this->code : $throwable->getCode();
 
         try {
 
@@ -73,6 +69,10 @@ class BaseExceptionHandler extends ExceptionHandler
 
         } catch (\Exception $ex) {
         }
+
+        // 格式化输出
+        $data = Result::fail($this->data, $this->message . $ex->getMessage(), $this->code);
+        $this->stopPropagation();
 
         return $response->withHeader('Server', 'Hyperf')->withStatus(500)->withBody(new SwooleStream($data));
     }
