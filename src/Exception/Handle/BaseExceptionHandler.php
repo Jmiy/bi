@@ -57,7 +57,7 @@ class BaseExceptionHandler extends ExceptionHandler
         $this->code = $this->code ? $this->code : $throwable->getCode();
 
         // 格式化输出
-        $data = Result::fail($this->data, $this->message . $ex->getMessage(), $this->code);
+        $data = Result::fail($this->data, $this->message, $this->code);
         $this->stopPropagation();
 
         try {
