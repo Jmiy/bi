@@ -108,4 +108,30 @@ if (!function_exists('pushQueue')) {
     }
 }
 
+if (!function_exists('getInternalIp')) {
+    /**
+     * 获取服务器ip.
+     * @return string|\RuntimeException
+     */
+    function getInternalIp(): string
+    {
+        //获取本服务的host
+        $host = config('services.rpc_service_provider.local.host', null);
+        if ($host !== null) {
+            return $host;
+        }
+
+        $ips = swoole_get_local_ip();
+        if (is_array($ips) && !empty($ips)) {
+            return current($ips);
+        }
+        /** @var mixed|string $ip */
+        $ip = gethostbyname(gethostname());
+        if (is_string($ip)) {
+            return $ip;
+        }
+        throw new \RuntimeException('Can not get the internal IP.');
+    }
+}
+
 

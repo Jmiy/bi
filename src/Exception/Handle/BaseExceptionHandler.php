@@ -60,18 +60,21 @@ class BaseExceptionHandler extends ExceptionHandler
         $data = Result::fail($this->data, $this->message, $this->code);
         $this->stopPropagation();
 
-        try {
+        $enable_app_exception_monitor = config('monitor.enable_app_exception_monitor', false);
+        if ($enable_app_exception_monitor) {//如果开启异常监控，就通过消息队列将异常，发送到相应的钉钉监控群
+            try {
 
-            $exceptionData = static::getMessage($throwable);
+                $exceptionData = static::getMessage($throwable);
 
-            //添加系统异常监控
-            $exceptionName = '系统异常：';
-            $message = data_get($exceptionData, 'message', '');
-            $code = data_get($exceptionData, 'exception_code') ? data_get($exceptionData, 'exception_code') : (data_get($exceptionData, 'http_code') ? data_get($exceptionData, 'http_code') : -101);
-            $parameters = [$exceptionName, $message, $code, data_get($exceptionData, 'file'), data_get($exceptionData, 'line'), $exceptionData];
-            MonitorServiceManager::handle('Ali', 'Ding', 'report', $parameters);
+                //添加系统异常监控
+                $exceptionName = '系统异常=>服务器ip-->' . getInternalIp();
+                $message = data_get($exceptionData, 'message', '');
+                $code = data_get($exceptionData, 'exception_code') ? data_get($exceptionData, 'exception_code') : (data_get($exceptionData, 'http_code') ? data_get($exceptionData, 'http_code') : -101);
+                $parameters = [$exceptionName, $message, $code, data_get($exceptionData, 'file'), data_get($exceptionData, 'line'), $exceptionData];
+                MonitorServiceManager::handle('Ali', 'Ding', 'report', $parameters);
 
-        } catch (\Exception $ex) {
+            } catch (\Exception $ex) {
+            }
         }
 
         return $response->withHeader('Server', 'Hyperf')->withStatus(500)->withBody(new SwooleStream($data));
