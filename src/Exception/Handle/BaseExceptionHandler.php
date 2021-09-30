@@ -56,6 +56,10 @@ class BaseExceptionHandler extends ExceptionHandler
         $this->message = $this->message ? $this->message : $throwable->getMessage();
         $this->code = $this->code ? $this->code : $throwable->getCode();
 
+        // 格式化输出
+        $data = Result::fail($this->data, $this->message . $ex->getMessage(), $this->code);
+        $this->stopPropagation();
+
         try {
 
             $exceptionData = static::getMessage($throwable);
@@ -69,10 +73,6 @@ class BaseExceptionHandler extends ExceptionHandler
 
         } catch (\Exception $ex) {
         }
-
-        // 格式化输出
-        $data = Result::fail($this->data, $this->message . $ex->getMessage(), $this->code);
-        $this->stopPropagation();
 
         return $response->withHeader('Server', 'Hyperf')->withStatus(500)->withBody(new SwooleStream($data));
     }
